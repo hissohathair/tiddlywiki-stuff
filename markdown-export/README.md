@@ -10,7 +10,7 @@ You are welcome to create [issues](https://github.com/cdaven/tiddlywiki-stuff/is
 
 ## Building
 
-When done updating Typescript files, run `make.ps1` (Windows only).
+When done updating Typescript files, run `make.ps1` (Windows only, or see [building on macOS](#building-on-macos)).
 
 This build process requires Powershell and npm. You should probably install Typescript and TiddlyWiki locally:
 
@@ -38,6 +38,15 @@ Recommended tsconfig.json:
         "node_modules"
     ]
 }
+```
+
+### Building on macOS
+
+You can install PowerShell on macOS:
+
+```shell-session
+% brew install --cask powershell
+% pwsh ./make.ps1
 ```
 
 ## Changelog
