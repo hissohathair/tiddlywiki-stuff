@@ -46,7 +46,7 @@ You can install PowerShell on macOS:
 
 ```shell-session
 % brew install --cask powershell
-% pwsh ./make.ps1
+% pwsh make.ps1
 ```
 
 ## Changelog

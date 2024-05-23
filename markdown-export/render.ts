@@ -94,6 +94,10 @@ export class MarkdownRenderer implements IMarkupRenderer {
             }
         }
 
+        // Add export date to metadata
+        this.tiddlerFields["tw-export-date"] = new Date().toISOString();
+        this.tiddlerFields["tw-export-version"] = `"cdaven/markdown-export (0.6.7)"`;
+
         // Prepend meta node last, in case attributes have changed during rendering
         const metaNode: TW_Element = {
             tag: "meta",

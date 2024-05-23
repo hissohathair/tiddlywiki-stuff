@@ -16,6 +16,13 @@ interface TableCell {
     align: string | undefined;
 }
 
+const renderAttributes = (attributes: { [key: string]: string }): string => {
+  // Convert the attributes object into an array of key-value pairs, then map to a string format
+  return Object.entries(attributes)
+    .map(([key, value]) => `${key}="${value}"`)
+    .join(' '); // Join all attribute strings into a single string separated by spaces
+}
+
 /** Get rules for rendering a TiddlyWiki widget tree consisting of HTML-ish elements/nodes */
 export function getRules(renderer: IMarkupRenderer): RulesRecord {
     let rules: RulesRecord = {
@@ -23,25 +30,51 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
         "meta": (node) => {
             const fields = node.attributes as Record<string, any>;
             let frontMatter: string[] = [];
-            if (fields.title) {
-                frontMatter.push(`title: '${fields.title}'`);
+            if (fields.caption) {
+                frontMatter.push(`title: "${fields.caption.replace(/"/g, '\\"')}"`);
+            } else if (fields.title) {
+                frontMatter.push(`title: "${fields.title.replace(/"/g, '\\"')}"`);
             }
             if (fields.author) {
-                frontMatter.push(`author: '${fields.author}'`);
+                frontMatter.push(`author: "${fields.author.replace(/"/g, '\\"')}"`);
             }
             if (fields.modified instanceof Date) {
                 frontMatter.push(`date: '${fields.modified.toISOString()}'`);
             }
             if (fields.description) {
-                frontMatter.push(`abstract: '${fields.description}'`);
+                // CHANGE: Use abstract field for description, and change all double quotes to escaped double quotes
+                frontMatter.push(`abstract: "${fields.description.replace(/"/g, '\\"')}"`);
+            }
+            if (fields.aliases) {
+                frontMatter.push(`aliases: ["${fields.aliases.replace(/"/g, '\\"')}"]`);
             }
             if (fields.tags && fields.tags.length > 0) {
                 // Enclose tags with single quotes and escape single quotes inside the tags
-                const tags: string[] = fields.tags.map((t: string) => `'${t.replace("'", "\\'")}'`);
-                frontMatter.push(`tags: [${tags.join(', ')}]`);
+                // CHANGE: Also, Obsidian doesn't accept tags that are all digits, so add a leading "y" to them
+                const tags: string[] = fields.tags.map((t: string) => `'${t.replace(/^(\d+)$/, "y$1").replace("'", "\\'")}'`);
+
+                // CHANGE: Push a subset of tags to a category field
+                const categoryTags: string[] = ["'Person'", "'Course'", "'Journal'", "'Meeting'", "'Organisation'", "'Project'", "'Reference'"];
+                const categories: string[] = tags.filter((t: string) => categoryTags.indexOf(t) !== -1);
+                if (categories.length > 0) {
+                    frontMatter.push(`category: [${categories.join(', ')}]`);
+                }
+
+                // CHANGE: Push tags that do not have spaces and are not members of categoryTags to tags field
+                const nonSpaceTags: string[] = tags.filter((t: string) => t.indexOf(" ") === -1 && categoryTags.indexOf(t) === -1);
+                if (nonSpaceTags.length > 0) {
+                    frontMatter.push(`tags: [${nonSpaceTags.join(', ')}]`);
+                }
+
+                // CHANGE: Use 'related' field for any left over tags
+                const remainingTags: string[] = tags.filter((t: string) => nonSpaceTags.indexOf(t) === -1 && categoryTags.indexOf(t) === -1).map((t: string) => `[[${t}]]`).map((t: string) => t.replace("[['", "'[[").replace("']]", "]]'"));
+                if (remainingTags.length > 0) {
+                    frontMatter.push(`related: [${remainingTags.join(', ')}]`);
+                }
+
             }
             for (const field in fields) {
-                if (["text", "title", "author", "modified", "description", "tags"].indexOf(field) !== -1)
+                if (["text", "title", "aliases", "author", "modified", "description", "tags", "modifier", "creator", "caption"].indexOf(field) !== -1)
                     // Ignore full text and the fields already taken care of
                     continue;
 
@@ -50,6 +83,12 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
 
                 // Clean up field value
                 let fieldValue = fields[field];
+                let fieldAsDate = new Date(fieldValue);
+                if (fieldAsDate instanceof Date && !isNaN(fieldAsDate.getTime())) {
+                    fieldValue = fieldAsDate;
+                }
+
+                // Output field value
                 if (fieldValue instanceof Date) {
                     fieldValue = "'" + fieldValue.toISOString() + "'";
                 }
@@ -59,7 +98,7 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 }
                 frontMatter.push(`${fieldName}: ${fieldValue}`);
             }
-            return `---\n${frontMatter.join("\n")}\n---\n\n# ${fields.title}\n\n`;
+            return `---\n${frontMatter.join("\n")}\n---\n`; // CHANGE: Do not emit title as heading
         },
         "p": (node, im) => {
             if (node.parentNode?.tag === "li") {
@@ -125,6 +164,7 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
         "h3": (_, im) => `### ${im}\n\n`,
         "h4": (_, im) => `#### ${im}\n\n`,
         // Definition lists
+        // TODO: Wish there was a better way for these
         "dl": (_, im) => `${im.trim()}\n\n`,
         "dt": (_, im) => `${im}\n`,
         "dd": (_, im) => ` ~ ${im}\n\n`,
@@ -146,25 +186,29 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 let classRx = node.attributes?.class?.match(/^(.+) hljs$/);
                 if (classRx) {
                     const lang = classRx[1];
-                    return `\`\`\`${lang}\n${im.trim()}\n\`\`\`\n\n`;
+                    // CHANGE: Don't trim pre-formatted code
+                    return `\`\`\`${lang}\n${im}\n\`\`\`\n\n`;
                 }
                 else {
-                    return `\`\`\`\n${im.trim()}\n\`\`\`\n\n`;
+                    return `\`\`\`\n${im}\n\`\`\`\n\n`;
                 }
             }
             else {
                 // As inline code
-                return `\`${im}\``;
+                // CHANGE: Trim inline pre-formatted
+                return `\`${im.trim()}\``;
             }
         },
         "blockquote": (node, im) => {
             let indentation = "";
+            let newLine = "";
             if (node.parentNode?.tag === "li") {
+                newLine = "\n";
                 indentation = "    ";
             }
             // Insert "> " at the beginning of each line
             const prefix = `${indentation}> `;
-            return `${prefix}${im.trim().replace(/\n/g, `\n${prefix}`)}\n\n`
+            return `${newLine}${prefix}${im.trim().replace(/\n/g, `\n${prefix}`)}\n\n`
         },
         "cite": (_, im) => {
             return `<cite>${im}</cite>`;
@@ -185,7 +229,10 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 console.error("Found <li> without parent");
                 return null;
             }
-            const listType = curNode.tag === "ul" ? "*" : "1.";
+            // Count the <li> tags in the parent node's attributes
+            const listItems = curNode.attributes?.li || 0;
+            curNode.attributes.li = listItems + 1;
+            const listType = curNode.tag === "ul" ? "-" : `${listItems+1}.`;
             const listTags = ["ul", "ol", "li"];
             let depth = -1;
             // Traverse up the path to count nesting levels
@@ -215,8 +262,18 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
         "a": (node, im) => {
             const href = node.attributes?.href as string;
             if (href == null || href?.startsWith("#")) {
-                // Render internal links as plain text, since the links probably lose all meaning outside the TiddlyWiki.
-                return im;
+                // CHANGE: Render internal links as [[wikilinks]]
+                // Also, Obsidian reverses position of alias and target
+                // Remove leading '#' from href if it exits
+                const target = decodeURIComponent(href.replace(/^#/, ''));
+                return target === im ? `[[${im}]]` : `[[${target}|${im}]]`;
+            } else if (href.startsWith("/Users/d.austin/Documents/Obsidian Vault/")) {
+                // CHANGE: Yeah, hacky again...
+                // If extension is .pdf, .png, .jpg, .mp4 (etc), then prefix with "!"
+                const mediaExtensions = [".pdf", ".png", ".jpg", ".jpeg", ".gif", ".mp4", ".webm", ".ogg", ".mp3", ".wav"];
+                const prefix = mediaExtensions.some(ext => href.endsWith(ext)) ? "!" : "";
+                const target = decodeURIComponent(href.replace("/Users/d.austin/Documents/Obsidian Vault/", "").replace("//", "/"));
+                return im && im === href ? `${prefix}[[${target}]]` : `${prefix}[[${target}|${im}]]`;
             } else if (im && im != href) {
                 return `[${im}](${href})`;
             }
@@ -236,6 +293,17 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                             src.substring(svgPrefix.length)
                         )
                     );
+            } else if (src.startsWith("/Users/d.austin/Documents/Obsidian Vault/")) {
+                // CHANGE: Getting VERY hacky here...
+                // Remove the path prefix
+                src = src.replace("/Users/d.austin/Documents/Obsidian Vault/", "");
+                // Also remove any double slashes...
+                src = src.replace("//", "/");
+                if (caption) {
+                    return `![[${src}|${caption}]]`;
+                } else {
+                    return `![[${src}]]`;
+                }
             }
             return `![${caption}](${src})`;
         },
@@ -345,12 +413,18 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 return null;
             }
         },
+        // Handle <iframe> tags
+        "iframe": (node, im) => {
+            // go through all members of attributes and add to iframe tag
+            return `<iframe ${renderAttributes(node.attributes)}>${im.trim()}</iframe>\n\n`;
+        },
         // Wildcard rule, catching all other inline elements
         "*": (node, im) => {
             if (im.trim().length > 0) {
                 return `<${node.tag}>${im.trim()}</${node.tag}>`;
             }
             else {
+                console.warn(`Warning: Empty ${node.tag} element will be ignored`);
                 return null;
             }
         },

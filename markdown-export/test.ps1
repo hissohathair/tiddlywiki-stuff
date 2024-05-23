@@ -1,4 +1,4 @@
-$TW_SINGLE_FILE = "..\..\cdaven.github.io\tiddlywiki\index.html"
+$TW_SINGLE_FILE = Join-Path "..\tiddlywiki" -ChildPath "index.html"
 $TW_NODE_DIR = "TW5.Test"
 
 Write-Host "Loading TiddlyWiki ..."
@@ -27,6 +27,10 @@ function CompareMarkdown()
     param ($Actual, $Expected)
     $_act = TrimNewlines(NormalizeNewlines($Actual))
     $_exp = TrimNewlines(NormalizeNewlines($Expected))
+
+    # Remove title ("# title") and 2 line breaks from $Expected
+    $_exp = $_exp -Replace "^# .+`n`n", ""
+    
     return $_act -ceq $_exp;
 }
 
