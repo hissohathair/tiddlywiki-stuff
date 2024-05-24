@@ -79,7 +79,7 @@ export class MarkdownRenderer implements IMarkupRenderer {
             return null;
         }
 
-        const nodes = this.tw.renderWidgetTree(title);
+        const nodes: TW_Node[] = this.tw.renderWidgetTree(title);
         this.tiddlerFields = this.tw.getFields(title);
         if (this.tiddlerFields == null) {
             console.warn(`Tiddler [[${title}]] doesn't seem to exist`);
@@ -96,7 +96,7 @@ export class MarkdownRenderer implements IMarkupRenderer {
 
         // Add export date to metadata
         this.tiddlerFields["tw-export-date"] = new Date().toISOString();
-        this.tiddlerFields["tw-export-version"] = `"cdaven/markdown-export (0.6.7)"`;
+        this.tiddlerFields["tw-export-version"] = `"cdaven/markdown-export (0.7.4)"`;
 
         // Prepend meta node last, in case attributes have changed during rendering
         const metaNode: TW_Element = {

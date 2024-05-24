@@ -38,6 +38,9 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
             if (fields.author) {
                 frontMatter.push(`author: "${fields.author.replace(/"/g, '\\"')}"`);
             }
+            if (fields.path) {
+                frontMatter.push(`path: "${fields.path.replace(/"/g, '\\"')}"`);
+            }
             if (fields.modified instanceof Date) {
                 frontMatter.push(`date: '${fields.modified.toISOString()}'`);
             }
@@ -50,8 +53,8 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
             }
             if (fields.tags && fields.tags.length > 0) {
                 // Enclose tags with single quotes and escape single quotes inside the tags
-                // CHANGE: Also, Obsidian doesn't accept tags that are all digits, so add a leading "y" to them
-                const tags: string[] = fields.tags.map((t: string) => `'${t.replace(/^(\d+)$/, "y$1").replace("'", "\\'")}'`);
+                // CHANGE: Also, Obsidian doesn't accept tags that are all digits, so add a leading "N" to them, or treat them as years
+                const tags: string[] = fields.tags.map((t: string) => `'${t.replace(/^(\d\d\d\d)$/, "Year/$1").replace(/^(\d+)$/, "N$1").replace("'", "\\'")}'`);
 
                 // CHANGE: Push a subset of tags to a category field
                 const categoryTags: string[] = ["'Person'", "'Course'", "'Journal'", "'Meeting'", "'Organisation'", "'Project'", "'Reference'"];
@@ -74,7 +77,7 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
 
             }
             for (const field in fields) {
-                if (["text", "title", "aliases", "author", "modified", "description", "tags", "modifier", "creator", "caption"].indexOf(field) !== -1)
+                if (["text", "title", "aliases", "author", "path", "modified", "description", "tags", "modifier", "creator", "caption"].indexOf(field) !== -1)
                     // Ignore full text and the fields already taken care of
                     continue;
 
@@ -157,6 +160,7 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 return im;
             }
         },
+        // TODO: Obsidian doesn't support sub/sup, but does have footnotes (while TW does not)
         "sub": (_, im) => `~${im.replace(/ /g, "\\ ")}~`,
         "sup": (_, im) => `^${im.replace(/ /g, "\\ ")}^`,
         "h1": (_, im) => `# ${im}\n\n`,
@@ -164,10 +168,11 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
         "h3": (_, im) => `### ${im}\n\n`,
         "h4": (_, im) => `#### ${im}\n\n`,
         // Definition lists
-        // TODO: Wish there was a better way for these
+        // CHANGE: Obsidian doesn't support definition lists, but Pandoc and others do support this format
+        // TODO: Alternatively, could try and render as a list
         "dl": (_, im) => `${im.trim()}\n\n`,
         "dt": (_, im) => `${im}\n`,
-        "dd": (_, im) => ` ~ ${im}\n\n`,
+        "dd": (_, im) => `: ${im}\n\n`,
         // Code blocks
         "pre": (node, im) => {
             if (node.children.every(child => isDomNode(child) && child.tag === "code")) {
@@ -241,6 +246,10 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                     depth++;
                 }
                 curNode = curNode.parentNode;
+            }
+            // guard against depth < 0
+            if (depth < 0) {
+                depth = 0;
             }
             const indent = "    ".repeat(depth);
             return `${indent}${listType} ${im.trim()}\n`;
@@ -418,13 +427,16 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
             // go through all members of attributes and add to iframe tag
             return `<iframe ${renderAttributes(node.attributes)}>${im.trim()}</iframe>\n\n`;
         },
+        // Explicit ignore rule
+        "_ignore": (node, im) => {
+            return null;
+        },
         // Wildcard rule, catching all other inline elements
         "*": (node, im) => {
             if (im.trim().length > 0) {
                 return `<${node.tag}>${im.trim()}</${node.tag}>`;
             }
             else {
-                console.warn(`Warning: Empty ${node.tag} element will be ignored`);
                 return null;
             }
         },
@@ -450,6 +462,8 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
     rules["main"] = rules["block"];
     rules["nav"] = rules["block"];
     rules["section"] = rules["block"];
+    rules["tbody"] = rules["_ignore"];
+    rules["thead"] = rules["_ignore"];
 
     return rules;
 }
