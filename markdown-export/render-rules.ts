@@ -23,6 +23,21 @@ const renderAttributes = (attributes: { [key: string]: string }): string => {
     .join(' '); // Join all attribute strings into a single string separated by spaces
 }
 
+/** TODO: Need to review the YAML escaping rules...
+ * Quotes:
+ *      Use double quotes (") for strings that contain special characters or need escaping.
+ *      Use single quotes (') for strings that contain double quotes or other characters that don't need to be escaped.
+ * Lists:
+ *      Use square brackets ([]) for inline lists.
+ *      Use a hyphen (-) for block lists, each item on a new line.
+ * Special Characters:
+ *      Backslash (\) is used to escape special characters within double-quoted strings.
+ *      Single quotes inside single-quoted strings should be doubled ('').
+ * Multiline Strings:
+ *      Use | for block literals (preserve newlines).
+ *      Use > for folded scalars (newlines become spaces).
+ */
+
 /** Get rules for rendering a TiddlyWiki widget tree consisting of HTML-ish elements/nodes */
 export function getRules(renderer: IMarkupRenderer): RulesRecord {
     let rules: RulesRecord = {
