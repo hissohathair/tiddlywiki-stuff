@@ -224,7 +224,7 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 }
                 curNode = curNode.parentNode;
             }
-            const indent = "    ".repeat(depth);
+            const indent = "    ".repeat(depth > 0 ? depth : 0);
             return `${indent}${listType} ${im.trim()}\n`;
         },
         "input": (node) => {
