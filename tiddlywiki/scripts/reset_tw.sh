@@ -1,7 +1,7 @@
 #!/bin/sh
 
 WIKIDIR=myWiki.$(date "+%Y%m%d")
-INFILE="$HOME/Documents/TiddlyWiki.html"
+INFILE="$HOME/Documents/TiddlyWiki/Upgraded_TiddlyWiki.html"
 
 echo "Working directory today is $WIKIDIR"
 
@@ -23,7 +23,7 @@ if [ -d "$WIKIDIR" ] ; then
     mv "$WIKIDIR" "$WIKIDIR.OLD"
 fi
 
-tiddlywiki --load "$INFILE" --savewikifolder $WIKIDIR
+npx tiddlywiki --load "$INFILE" --savewikifolder $WIKIDIR
 #tiddlywiki myWiki --import "$INFILE" "text/html"
 
 echo " "

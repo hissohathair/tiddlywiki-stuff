@@ -18,7 +18,7 @@ if [ ! -d "$EXPORTDIR" ] ; then
     echo "Error: $EXPORTDIR is not found, or not a directory"
     exit 1
 fi
-if [ ! -d "$OBSIDIAN" ] ; then
+if [ ! -d "$OBSIDIAN" ] && ! mkdir "$OBSIDIAN" ; then
     echo "Error: $OBSIDIAN is not found, or not a directory"
     exit 1
 fi
@@ -33,6 +33,7 @@ if [ -n "$DUPELIST" ] ; then
     echo "Warning: Duplicates:"
     echo $DUPELIST
     echo " "
+    exit 1
 fi
 
 echo "- Copying to $OBSIDIAN/"

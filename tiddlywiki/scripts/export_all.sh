@@ -25,11 +25,16 @@ if [ -d "$EXPORTDIR" ] ; then
     echo " "
 fi
 
-tiddlywiki "$WIKIDIR" --render "[!prefix[$:/]$FILTER]" '[is[tiddler]addsuffix[.md]]' 'text/plain' '$:/plugins/cdaven/markdown-export/md-tiddler'
+if npx tiddlywiki "$WIKIDIR" --render "[!prefix[$:/]$FILTER]" '[is[tiddler]addsuffix[.md]]' 'text/plain' '$:/plugins/cdaven/markdown-export/md-tiddler' ; then
+    echo "Exported to $EXPORTDIR"
+else
+    echo "Export failed"
+    exit 1
+fi
 
 echo " "
 echo "Reorganising..."
-./move_exported_files.sh "$EXPORTDIR" 1> ./.move_exported_files.log
+$(dirname $0)/move_exported_files.sh "$EXPORTDIR" 1> move_exported_files.log
 
 echo " "
 echo "Export complete. Checking for duplicate files..."

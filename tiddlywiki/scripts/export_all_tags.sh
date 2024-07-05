@@ -22,7 +22,7 @@ if [ -d "$EXPORTDIR" ] ; then
     echo " "
 fi
 
-EX="./export_by_tag.sh"
+EX="$(dirname $0)/export_by_tag.sh"
 if [ ! -x "$EX" ] ; then
     echo "$0: Error: $EX not found or not executable"
     exit 1

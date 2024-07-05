@@ -23,6 +23,6 @@ EXPORTDIR="$WIKIDIR/output"
 
 echo "Exporting $TAG to $EXPORTDIR/$TARGET"
 
-tiddlywiki "$WIKIDIR" --render "[!prefix[$:/]tag[$TAG]$FILTER]" "[addprefix[$TARGET/]addsuffix[.md]]" 'text/plain' '$:/plugins/cdaven/markdown-export/md-tiddler'
+npx tiddlywiki "$WIKIDIR" --render "[!prefix[$:/]tag[$TAG]$FILTER]" "[addprefix[$TARGET/]addsuffix[.md]]" 'text/plain' '$:/plugins/cdaven/markdown-export/md-tiddler'
 
 
