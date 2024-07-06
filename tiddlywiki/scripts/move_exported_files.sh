@@ -24,7 +24,7 @@ for file in *.md; do
     continue
   fi
 
-  path=$(egrep '^path:' "$file" | sed -e 's/^path: "//' -e 's/"$//')
+  path=$(egrep '^path:' "$file" | sed -e "s/^path: '//" -e "s/'$//")
   if [ "x$path" = "x" ]; then
     echo "Leaving $file in place"
     continue
