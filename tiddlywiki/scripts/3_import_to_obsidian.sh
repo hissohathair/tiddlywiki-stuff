@@ -19,17 +19,17 @@ if [ ! -d "$EXPORTDIR" ] ; then
     exit 1
 fi
 if [ ! -d "$OBSIDIAN" ] && ! mkdir "$OBSIDIAN" ; then
-    echo "Error: $OBSIDIAN is not found, or not a directory"
+    echo "Error: $OBSIDIAN is not found/createable, or not a directory"
     exit 1
 fi
 
 echo "Importing from $EXPORTDIR to $OBSIDIAN"
 
 echo "- Checking for duplicate files..."
-DUPELIST=`fdupes -r "$EXPORTDIR"`
+DUPELIST=`fdupes -r "$EXPORTDIR" "$OBSIDIAN"`
 if [ -n "$DUPELIST" ] ; then
     echo "Warning: Export has duplicate files, de-dupe with "
-    echo "    fdupes -d -r \"$EXPORTDIR\""
+    echo "    fdupes -d -r \"$EXPORTDIR\" \"$OBSIDIAN\""
     echo "Warning: Duplicates:"
     echo $DUPELIST
     echo " "
