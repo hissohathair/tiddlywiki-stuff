@@ -163,8 +163,6 @@ created: '2024-06-28T22:39:21.848Z'
 TestExport -TwPage 'TestPage/FrontMatter/Tags' -Expected $expected -Scope "frontmatter"
 
 $expected = @'
-# TestPage/BasicFormatting
-
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. In maximus faucibus nulla, at finibus velit lobortis eget. Suspendisse eu tincidunt ipsum. Sed vehicula lorem elit, ut tempor ante dictum quis. Maecenas elementum finibus mi non faucibus.
 
 ## Bold
@@ -198,8 +196,6 @@ Lorem ~ipsum\ dolor~ sit amet ^consectetur\ adipiscing\ elit^.
 TestExport -TwPage 'TestPage/BasicFormatting' -Expected $expected
 
 $expected = @'
-# TestPage/Headings
-
 # h1
 
 ## h2
@@ -211,8 +207,6 @@ $expected = @'
 TestExport -TwPage 'TestPage/Headings' -Expected $expected
 
 $expected = @'
-# TestPage/Links
-
 An internal link: [[Markdown Export Plugin]]. These are rendered as plain text, since the target of the link may or may not be present in the exported material.
 
 An internal link with an alias: [[Markdown Export Plugin|alias]].
@@ -226,8 +220,6 @@ A CamelCase link and a CamelCase non-link.
 TestExport -TwPage 'TestPage/Links' -Expected $expected
 
 $expected = @'
-# TestPage/Lists
-
 ## Unordered
 
 * First
@@ -277,8 +269,6 @@ Must transclude tiddler with multiple paragraphs, since WikiText doesn't allow i
 TestExport -TwPage 'TestPage/Lists' -Expected $expected
 
 $expected = @'
-# TestPage/ToDo
-
 * [x] Meet Gandalf
 * [ ] Go on adventure
 * [ ] Destroy ring
@@ -286,8 +276,6 @@ $expected = @'
 TestExport -TwPage 'TestPage/ToDo' -Expected $expected
 
 $expected = @'
-# TestPage/Quotes
-
 > Just a normal blockquote.
 
 With a citation:
@@ -316,8 +304,6 @@ A poem with forced line breaks:
 TestExport -TwPage 'TestPage/Quotes' -Expected $expected
 
 $expected = @'
-# TestPage/Code
-
 If you have the [Highlight plugin](https://tiddlywiki.com/plugins/tiddlywiki/highlight/) installed, the language of the code in the snippet will be included in the export as well. Otherwise, not.
 
 ```c
@@ -349,8 +335,6 @@ And finally an `inline code` example.
 TestExport -TwPage 'TestPage/Code' -Expected $expected
 
 $expected = @'
-# TestPage/Definitions
-
 Again, not in the common Markdown specification, but Pandoc understands it.
 
 Term being defined
@@ -362,8 +346,6 @@ Another term
 TestExport -TwPage 'TestPage/Definitions' -Expected $expected
 
 $expected = @'
-# TestPage/Tables
-
 Unfortunately, Markdown has a *very* limited table syntax. The first row must be a header, and you cannot use col-spacing or row-spacing or different alignment in different cells.
 
 | Cell1 | Cell2 |
@@ -380,8 +362,6 @@ Unfortunately, Markdown has a *very* limited table syntax. The first row must be
 TestExport -TwPage 'TestPage/Tables' -Expected $expected
 
 $expected = @'
-# TestPage/Images
-
 Images are exported using the "data" protocol, which means they will be embedded in the Markdown (I have not tried this from a Node.js installation of TiddlyWiki, that probably works differently).
 
 PNGs seem to work fine, at least in some Markdown renderers and Pandoc:
@@ -403,8 +383,6 @@ Hotlinking should work, as long as the image is available. Could be a security i
 TestExport -TwPage 'TestPage/Images' -Expected $expected
 
 $expected = @'
-# TestPage/Misc
-
 En-dash: –
 
 Em-dash: —
@@ -421,8 +399,6 @@ Content will be immediately visible if open is set to "yes".</details>
 TestExport -TwPage 'TestPage/Misc' -Expected $expected
 
 $expected = @'
-# TestPage/FontAwesome
-
 FontAwesome icons will be rendered as �. I would recommend using Unicode characters instead of icons in the text.
 
 I would � some �!
@@ -430,8 +406,6 @@ I would � some �!
 TestExport -TwPage 'TestPage/FontAwesome' -Expected $expected
 
 $expected = @'
-# TestPage/SelfReferencing
-
 Referencing the current tiddler (TestPage/SelfReferencing) in various ways:
 
 * [[TestPage/SelfReferencing]]
@@ -441,8 +415,6 @@ A short and sweet description
 TestExport -TwPage 'TestPage/SelfReferencing' -Expected $expected
 
 $expected = @'
-# TestPage/KaTeX
-
 Rendering of this in both TiddlyWiki and the exported markup requires the [KaTeX plugin](https://tiddlywiki.com/plugins/tiddlywiki/katex/).
 
 Note that Markdown doesn't support math by default, but in Pandoc and some other renderers it works.

@@ -62,7 +62,7 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
             const fields = node.attributes as Record<string, any>;
             let frontMatter: string[] = [];
             if (fields.title) {
-                frontMatter.push(`title: '${fields.title}'`);
+                frontMatter.push(`title: '${formatYAMLString(fields.title)}'`);
             }
             if (fields.author) {
                 frontMatter.push(`author: '${fields.author}'`);
@@ -88,7 +88,7 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 let fieldValue = formatYAMLString(fields[field]);
                 frontMatter.push(`${fieldName}: ${fieldValue}`);
             }
-            return `---\n${frontMatter.join("\n")}\n---\n\n# ${fields.title}\n\n`;
+            return `---\n${frontMatter.join("\n")}\n---\n\n`; // OBSIDIAN: Don't render title at top of page
         },
         "p": (node, im) => {
             if (node.parentNode?.tag === "li") {
