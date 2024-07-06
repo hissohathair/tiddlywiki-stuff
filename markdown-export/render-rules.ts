@@ -71,7 +71,7 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 frontMatter.push(`date: ${formatYAMLString(fields.modified)}`);
             }
             if (fields.description) {
-                frontMatter.push(`abstract: '${fields.description}'`);
+                frontMatter.push(`abstract: '${formatYAMLString(fields.description)}'`);
             }
             if (fields.tags && fields.tags.length > 0) {
                 // Enclose tags with single quotes and escape single quotes inside the tags
@@ -154,9 +154,10 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
         "h3": (_, im) => `### ${im}\n\n`,
         "h4": (_, im) => `#### ${im}\n\n`,
         // Definition lists
+        // OBSIDIAN: Obsidian doesn't support definition lists, but Pandoc and others do support this format
         "dl": (_, im) => `${im.trim()}\n\n`,
         "dt": (_, im) => `${im}\n`,
-        "dd": (_, im) => ` ~ ${im}\n\n`,
+        "dd": (_, im) => `: ${im}\n\n`,
         // Code blocks
         "pre": (node, im) => {
             if (node.children.every(child => isDomNode(child) && child.tag === "code")) {
@@ -175,15 +176,17 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 let classRx = node.attributes?.class?.match(/^(.+) hljs$/);
                 if (classRx) {
                     const lang = classRx[1];
-                    return `\`\`\`${lang}\n${im.trim()}\n\`\`\`\n\n`;
+                    // OBSIDIAN: Don't trim pre-formatted code
+                    return `\`\`\`${lang}\n${im}\n\`\`\`\n\n`;
                 }
                 else {
-                    return `\`\`\`\n${im.trim()}\n\`\`\`\n\n`;
+                    return `\`\`\`\n${im}\n\`\`\`\n\n`;
                 }
             }
             else {
                 // As inline code
-                return `\`${im}\``;
+                // OBSIDIAN: Trim in-line pre-formatted
+                return `\`${im.trim()}\``;
             }
         },
         "blockquote": (node, im) => {
@@ -214,7 +217,11 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
                 console.error("Found <li> without parent");
                 return null;
             }
-            const listType = curNode.tag === "ul" ? "*" : "1.";
+            // Count the <li> tags in the parent node's attributes
+            // OBSIDIAN: Use the real numbers for ordered lists
+            const listItems = curNode.attributes?.li || 0;
+            curNode.attributes.li = listItems + 1;
+            const listType = curNode.tag === "ul" ? "*" : `${listItems+1}.`;
             const listTags = ["ul", "ol", "li"];
             let depth = -1;
             // Traverse up the path to count nesting levels
@@ -244,8 +251,11 @@ export function getRules(renderer: IMarkupRenderer): RulesRecord {
         "a": (node, im) => {
             const href = node.attributes?.href as string;
             if (href == null || href?.startsWith("#")) {
-                // Render internal links as plain text, since the links probably lose all meaning outside the TiddlyWiki.
-                return im;
+                // CHANGE: Render internal links as [[wikilinks]]
+                // Also, Obsidian reverses position of alias and target
+                // Remove leading '#' from href if it exits
+                const target = decodeURIComponent(href.replace(/^#/, ''));
+                return target === im ? `[[${im}]]` : `[[${target}|${im}]]`;
             } else if (im && im != href) {
                 return `[${im}](${href})`;
             }

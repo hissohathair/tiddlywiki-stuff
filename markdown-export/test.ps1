@@ -213,9 +213,9 @@ TestExport -TwPage 'TestPage/Headings' -Expected $expected
 $expected = @'
 # TestPage/Links
 
-An internal link: Markdown Export Plugin. These are rendered as plain text, since the target of the link may or may not be present in the exported material.
+An internal link: [[Markdown Export Plugin]]. These are rendered as plain text, since the target of the link may or may not be present in the exported material.
 
-An internal link with an alias: alias.
+An internal link with an alias: [[Markdown Export Plugin|alias]].
 
 An external link: <https://tiddlywiki.com>.
 
@@ -237,20 +237,20 @@ $expected = @'
 ## Ordered
 
 1. First
-1. Second
-1. Third
+2. Second
+3. Third
 
 ## Mixed
 
 1. 1-1
     * 2-1
     * 2-2
-1. 1-2
+2. 1-2
     * 2-3
         * 3-1
         * 3-2
             1. 4-1
-            1. 4-2
+            2. 4-2
 
 ## With Quotes
 
@@ -354,10 +354,10 @@ $expected = @'
 Again, not in the common Markdown specification, but Pandoc understands it.
 
 Term being defined
- ~ Definition of that term
+: Definition of that term
 
 Another term
- ~ Another definition
+: Another definition
 '@
 TestExport -TwPage 'TestPage/Definitions' -Expected $expected
 
@@ -434,7 +434,7 @@ $expected = @'
 
 Referencing the current tiddler (TestPage/SelfReferencing) in various ways:
 
-* TestPage/SelfReferencing
+* [[TestPage/SelfReferencing]]
 
 A short and sweet description
 '@
